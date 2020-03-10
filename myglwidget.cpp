@@ -4,14 +4,13 @@
 #include <QKeyEvent>
 #include <QDebug>
 
-static QRectF myRect;
-
 MyGLWidget::MyGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
-    myRect.setX(20);
-    myRect.setY(20);
-    myRect.setWidth(20);
-    myRect.setHeight(20);
+    textures.load(":/textures");
+
+    player = QImage(40, 40, QImage::Format_RGB32);
+    QPainter p(&player);
+    p.drawImage(myRect, textures, QRectF(150, 0, 40, 40));
 
     grabKeyboard();
     update();
@@ -45,7 +44,7 @@ void MyGLWidget::initializeGL()
 
 void MyGLWidget::paintGL() {
 
-    const int delta = 2.0;
+    const qreal delta = 3.0;
 
     if (isKeyDownPressed) {
         myRect.translate(0, delta);
@@ -65,6 +64,7 @@ void MyGLWidget::paintGL() {
 
     painter.begin(this);
     painter.fillRect(myRect, qRgb(255, 255, 255));
+    painter.drawImage(myRect, player);
     painter.end();
 
     update();

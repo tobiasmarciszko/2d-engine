@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QPainter>
 #include <QOpenGLFunctions>
+#include <QRectF>
 
 class MyGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
@@ -27,6 +28,8 @@ private:
     bool isKeyDownPressed = false;
     bool isKeyLeftPressed = false;
     bool isKeyRightPressed = false;
+    QRectF myRect{0, 0, 40, 40};
+    QImage textures;
+    QImage player;
 };
-
 #endif // MYGLWIDGET_H

@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="textures">gradius_clone_0.png</file>
+    </qresource>
+</RCC>

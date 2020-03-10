@@ -32,6 +32,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    textures.qrc
   )
 
 target_link_libraries(2d-engine PRIVATE Qt5::Widgets)
