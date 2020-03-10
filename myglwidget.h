@@ -15,6 +15,8 @@ public:
     explicit MyGLWidget(QWidget *parent = nullptr);
 
 protected:
+    void initializeGL() override;
+
     void paintGL() override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;

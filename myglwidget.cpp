@@ -2,6 +2,7 @@
 #include "QRgb"
 #include <QPainter>
 #include <QKeyEvent>
+#include <QDebug>
 
 static QRectF myRect;
 
@@ -14,6 +15,32 @@ MyGLWidget::MyGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 
     grabKeyboard();
     update();
+}
+
+void MyGLWidget::initializeGL()
+{
+    initializeOpenGLFunctions();
+
+    QString glType;
+    QString glVersion;
+    QString glProfile;
+
+    // Get Version Information
+    glType = (context()->isOpenGLES()) ? "OpenGL ES" : "OpenGL";
+    glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+
+    // Get Profile Information
+#define CASE(c) case QSurfaceFormat::c: glProfile = #c; break
+    switch (format().profile())
+    {
+        CASE(NoProfile);
+        CASE(CoreProfile);
+        CASE(CompatibilityProfile);
+    }
+#undef CASE
+
+    qDebug() << qPrintable(glType) << qPrintable(glVersion) << "(" << qPrintable(glProfile) << ")";
+
 }
 
 void MyGLWidget::paintGL() {
