@@ -28,8 +28,8 @@ private:
     bool isKeyDownPressed = false;
     bool isKeyLeftPressed = false;
     bool isKeyRightPressed = false;
-    QRectF myRect{0, 0, 40, 40};
+    QPointF playerPos{0, 0};
     QImage textures;
-    QImage player;
+    QImage player{80, 80, QImage::Format_ARGB32};
 };
 #endif // MYGLWIDGET_H

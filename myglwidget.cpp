@@ -7,10 +7,8 @@
 MyGLWidget::MyGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
     textures.load(":/textures");
-
-    player = QImage(40, 40, QImage::Format_RGB32);
     QPainter p(&player);
-    p.drawImage(myRect, textures, QRectF(150, 0, 40, 40));
+    p.drawImage(player.rect(), textures, QRectF(150, 0, 40, 40));
 
     grabKeyboard();
     update();
@@ -44,27 +42,44 @@ void MyGLWidget::initializeGL()
 
 void MyGLWidget::paintGL() {
 
-    const qreal delta = 3.0;
+    const qreal delta = 6.0;
 
     if (isKeyDownPressed) {
-        myRect.translate(0, delta);
+        playerPos.ry()+=delta;
     }
 
     if (isKeyUpPressed) {
-        myRect.translate(0, -delta);
+        playerPos.ry()-=delta;
     }
 
     if (isKeyLeftPressed) {
-        myRect.translate(-delta, 0);
+        playerPos.rx()-=delta;
     }
 
     if (isKeyRightPressed) {
-        myRect.translate(delta, 0);
+        playerPos.rx()+=delta;
+    }
+
+    // Limit player to height and width if the viewport
+    if (playerPos.rx() > width() - player.rect().width()) {
+        playerPos.rx() = width() - player.rect().width();
+    }
+
+    if (playerPos.rx() <= 0) {
+        playerPos.rx() = 0;
+    }
+
+    if (playerPos.ry() > height() - player.rect().height()) {
+        playerPos.ry() = height() - player.rect().height();
+    }
+
+    if (playerPos.ry() <= 0) {
+        playerPos.ry() = 0;
     }
 
     painter.begin(this);
-    painter.fillRect(myRect, qRgb(255, 255, 255));
-    painter.drawImage(myRect, player);
+    painter.fillRect(0,0, width(), height(), Qt::lightGray);
+    painter.drawImage(playerPos, player);
     painter.end();
 
     update();
