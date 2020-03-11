@@ -46,10 +46,16 @@ void MyGLWidget::paintGL() {
 
     if (isKeyDownPressed) {
         playerPos.ry()+=delta;
+        player.fill(Qt::transparent);
+        QPainter p(&player);
+        p.drawImage(player.rect(), textures, QRectF(390, 0, 40, 40));
     }
 
     if (isKeyUpPressed) {
         playerPos.ry()-=delta;
+        player.fill(Qt::transparent);
+        QPainter p(&player);
+        p.drawImage(player.rect(), textures, QRectF(7, 0, 40, 40));
     }
 
     if (isKeyLeftPressed) {
@@ -58,6 +64,12 @@ void MyGLWidget::paintGL() {
 
     if (isKeyRightPressed) {
         playerPos.rx()+=delta;
+    }
+
+    if (!isKeyUpPressed && !isKeyDownPressed) {
+        player.fill(Qt::transparent);
+        QPainter p(&player);
+        p.drawImage(player.rect(), textures, QRectF(150, 0, 40, 40));
     }
 
     // Limit player to height and width if the viewport
