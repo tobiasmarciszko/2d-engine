@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt5 COMPONENTS Core Gui REQUIRED)
 add_executable(2d-engine
+    player.h
     main.cpp
     mainwindow.cpp
     mainwindow.h

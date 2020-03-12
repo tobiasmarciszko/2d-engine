@@ -3,6 +3,9 @@
 
 #include <QtGui/QOpenGLWindow>
 #include <QtGui/QOpenGLFunctions>
+#include <QElapsedTimer>
+
+#include "player.h"
 
 QT_BEGIN_NAMESPACE
 class QPainter;
@@ -15,7 +18,7 @@ class MainWindow : public QOpenGLWindow, protected QOpenGLFunctions
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWindow *parent = nullptr);
+    MainWindow();
 
     void initializeGL() override;
     void paintGL() override;
@@ -23,8 +26,12 @@ public:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
 
-
 private:
+
+    void updateBackground();
+    void updateBullets();
+    void updatePlayer();
+
     bool isKeyUpPressed = false;
     bool isKeyDownPressed = false;
     bool isKeyLeftPressed = false;
@@ -34,9 +41,12 @@ private:
     QVector<QPointF> bullets;
     int ticksBetweenBullets = 5;
     int currentBulletTick = 0;
-    QPointF playerPos{0, 0};
     QImage textures;
-    QImage player{75, 80, QImage::Format_ARGB32};
     QImage bullet{40, 20, QImage::Format_ARGB32};
+    Player player;
+    QPainter painter;
+    int frames{0};
+    QElapsedTimer frameTime;
+    double fps;
 };
 #endif // MAINWINDOW_H

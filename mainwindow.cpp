@@ -8,11 +8,9 @@
 #include <QKeyEvent>
 #include <QDebug>
 
-MainWindow::MainWindow(QWindow *parent)
+MainWindow::MainWindow()
 {
     textures.load(":/textures");
-    QPainter p(&player);
-    p.drawImage(player.rect(), textures, QRectF(150, 0, 35, 35));
 
     QPainter p2(&bullet);
     p2.drawImage(bullet.rect(), textures, QRectF(240, 50, 15, 10));
@@ -22,6 +20,7 @@ MainWindow::MainWindow(QWindow *parent)
 
 void MainWindow::initializeGL()
 {
+    frameTime.start();
     initializeOpenGLFunctions();
 
     QString glType;
@@ -47,19 +46,41 @@ void MainWindow::initializeGL()
 }
 void MainWindow::paintGL()
 {
-    QPainter painter(this);
+    painter.begin(this);
+
+    updateBackground();
+    updateBullets();
+    updatePlayer();
+
+    // show fps counter?
+    frames++;
+    if (frameTime.elapsed() > 1000.0) {
+         fps = frames / (frameTime.elapsed()/1000.0);
+         frames = 0;
+         frameTime.restart();
+    }
+
+    painter.drawText(0, 10, "FPS: " + QString::number(fps));
+
+    painter.end();
+    update();
+}
+
+void MainWindow::updateBackground()
+{
     painter.fillRect(0,0, width(), height(), Qt::lightGray);
+}
 
-    // updated bullets
-
+void MainWindow::updateBullets()
+{
     if (isKeySpacePressed && (currentBulletTick >= ticksBetweenBullets)) {
-        QPointF bulletPos{playerPos.rx()+player.width(), playerPos.ry() + player.height()/2};
+        QPointF bulletPos{player.pos.rx()+player.width, player.pos.ry() + player.height/2};
         bullets.append(bulletPos);
         currentBulletTick = 0;
     }
 
-    for(QPointF& b: bullets) {
-        b.rx()+=12.0;
+    for (QPointF& b: bullets) {
+        b.rx() += 12.0;
 
         if (b.rx() > width()) {
             bullets.removeFirst();
@@ -68,58 +89,49 @@ void MainWindow::paintGL()
         painter.drawImage(b, bullet);
     }
 
-    // update player
-    const qreal delta = 6.0;
+    currentBulletTick = currentBulletTick + 1 % 200;
+}
+
+void MainWindow::updatePlayer() {
 
     if (isKeyDownPressed) {
-        playerPos.ry()+=delta;
-        player.fill(Qt::transparent);
-        QPainter p(&player);
-        p.drawImage(player.rect(), textures, QRectF(390, 0, 35, 40));
+        player.moveDown();
     }
 
     if (isKeyUpPressed) {
-        playerPos.ry()-=delta;
-        player.fill(Qt::transparent);
-        QPainter p(&player);
-        p.drawImage(player.rect(), textures, QRectF(7, 0, 35, 40));
+        player.moveUp();
     }
 
     if (isKeyLeftPressed) {
-        playerPos.rx()-=delta;
+        player.moveLeft();
     }
 
     if (isKeyRightPressed) {
-        playerPos.rx()+=delta;
+        player.moveRight();
     }
 
     if (!isKeyUpPressed && !isKeyDownPressed) {
-        player.fill(Qt::transparent);
-        QPainter p(&player);
-        p.drawImage(player.rect(), textures, QRectF(150, 0, 35, 40));
+        player.hovering();
     }
 
     // Limit player to height and width if the viewport
-    if (playerPos.rx() > width() - player.rect().width()) {
-        playerPos.rx() = width() - player.rect().width();
+    if (player.pos.rx() > width() - player.width) {
+        player.pos.rx() = width() - player.width;
     }
 
-    if (playerPos.rx() <= 0) {
-        playerPos.rx() = 0;
+    if (player.pos.rx() <= 0) {
+        player.pos.rx() = 0;
     }
 
-    if (playerPos.ry() > height() - player.rect().height()) {
-        playerPos.ry() = height() - player.rect().height();
+    if (player.pos.ry() > height() - player.height) {
+        player.pos.ry() = height() - player.height;
     }
 
-    if (playerPos.ry() <= 0) {
-        playerPos.ry() = 0;
+    if (player.pos.ry() <= 0) {
+        player.pos.ry() = 0;
     }
 
-    painter.drawImage(playerPos, player);
-
-    currentBulletTick = currentBulletTick + 1 % 200;
-    update();
+    player.paint(painter);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e)
