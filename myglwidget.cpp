@@ -8,7 +8,10 @@ MyGLWidget::MyGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
     textures.load(":/textures");
     QPainter p(&player);
-    p.drawImage(player.rect(), textures, QRectF(150, 0, 40, 40));
+    p.drawImage(player.rect(), textures, QRectF(150, 0, 35, 35));
+
+    QPainter p2(&bullet);
+    p2.drawImage(bullet.rect(), textures, QRectF(240, 50, 15, 10));
 
     grabKeyboard();
     update();
@@ -42,20 +45,42 @@ void MyGLWidget::initializeGL()
 
 void MyGLWidget::paintGL() {
 
+    painter.begin(this);
+    painter.fillRect(0,0, width(), height(), Qt::black);
+
+    // updated bullets
+
+    if (isKeySpacePressed && (currentBulletTick >= ticksBetweenBullets)) {
+        QPointF bulletPos{playerPos.rx()+player.width(), playerPos.ry() + player.height()/2};
+        bullets.append(bulletPos);
+        currentBulletTick = 0;
+    }
+
+    for(QPointF& b: bullets) {
+        b.rx()+=12.0;
+
+        if (b.rx() > width()) {
+            bullets.removeFirst();
+        }
+
+        painter.drawImage(b, bullet);
+    }
+
+    // update player
     const qreal delta = 6.0;
 
     if (isKeyDownPressed) {
         playerPos.ry()+=delta;
         player.fill(Qt::transparent);
         QPainter p(&player);
-        p.drawImage(player.rect(), textures, QRectF(390, 0, 40, 40));
+        p.drawImage(player.rect(), textures, QRectF(390, 0, 35, 40));
     }
 
     if (isKeyUpPressed) {
         playerPos.ry()-=delta;
         player.fill(Qt::transparent);
         QPainter p(&player);
-        p.drawImage(player.rect(), textures, QRectF(7, 0, 40, 40));
+        p.drawImage(player.rect(), textures, QRectF(7, 0, 35, 40));
     }
 
     if (isKeyLeftPressed) {
@@ -69,7 +94,7 @@ void MyGLWidget::paintGL() {
     if (!isKeyUpPressed && !isKeyDownPressed) {
         player.fill(Qt::transparent);
         QPainter p(&player);
-        p.drawImage(player.rect(), textures, QRectF(150, 0, 40, 40));
+        p.drawImage(player.rect(), textures, QRectF(150, 0, 35, 40));
     }
 
     // Limit player to height and width if the viewport
@@ -89,11 +114,10 @@ void MyGLWidget::paintGL() {
         playerPos.ry() = 0;
     }
 
-    painter.begin(this);
-    painter.fillRect(0,0, width(), height(), Qt::lightGray);
     painter.drawImage(playerPos, player);
     painter.end();
 
+    currentBulletTick = currentBulletTick + 1 % 200;
     update();
 }
 
@@ -114,6 +138,10 @@ void MyGLWidget::keyPressEvent(QKeyEvent *e)
     if (e->key() == Qt::Key_Right) {
         isKeyRightPressed = true;
     }
+
+    if (e->key() == Qt::Key_Space) {
+        isKeySpacePressed = true;
+    }
 }
 
 void MyGLWidget::keyReleaseEvent(QKeyEvent *e)
@@ -133,6 +161,11 @@ void MyGLWidget::keyReleaseEvent(QKeyEvent *e)
     if (e->key() == Qt::Key_Right) {
         isKeyRightPressed = false;
     }
+
+    if (e->key() == Qt::Key_Space) {
+        isKeySpacePressed = false;
+    }
+
 }
 
 

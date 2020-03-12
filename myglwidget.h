@@ -28,8 +28,13 @@ private:
     bool isKeyDownPressed = false;
     bool isKeyLeftPressed = false;
     bool isKeyRightPressed = false;
+    bool isKeySpacePressed = false;
+    QVector<QPointF> bullets;
+    int ticksBetweenBullets = 5;
+    int currentBulletTick = 0;
     QPointF playerPos{0, 0};
     QImage textures;
-    QImage player{80, 80, QImage::Format_ARGB32};
+    QImage player{75, 80, QImage::Format_ARGB32};
+    QImage bullet{40, 20, QImage::Format_ARGB32};
 };
 #endif // MYGLWIDGET_H
