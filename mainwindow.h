@@ -6,6 +6,7 @@
 #include <QElapsedTimer>
 
 #include "player.h"
+#include "bullet.h"
 
 QT_BEGIN_NAMESPACE
 class QPainter;
@@ -31,6 +32,7 @@ private:
     void updateBackground();
     void updateBullets();
     void updatePlayer();
+    void updateFPSCounter();
 
     bool isKeyUpPressed = false;
     bool isKeyDownPressed = false;
@@ -38,11 +40,9 @@ private:
     bool isKeyRightPressed = false;
     bool isKeySpacePressed = false;
 
-    QVector<QPointF> bullets;
+    QVector<Bullet> bullets{};
     int ticksBetweenBullets = 5;
     int currentBulletTick = 0;
-    QImage textures;
-    QImage bullet{40, 20, QImage::Format_ARGB32};
     Player player;
     QPainter painter;
     int frames{0};

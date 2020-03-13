@@ -7,15 +7,48 @@
 #include <QtGui/QPainter>
 #include <QKeyEvent>
 #include <QDebug>
+#include <QtGamepad/QGamepad>
 
 MainWindow::MainWindow()
 {
-    textures.load(":/textures");
-
-    QPainter p2(&bullet);
-    p2.drawImage(bullet.rect(), textures, QRectF(240, 50, 15, 10));
-
     setKeyboardGrabEnabled(true);
+    connect(this, SIGNAL(frameSwapped()), this, SLOT(update()));
+
+    connect(QGamepadManager::instance(), &QGamepadManager::gamepadAxisEvent, this, [&](int deviceId, QGamepadManager::GamepadAxis axis, double value){
+        if (axis == QGamepadManager::AxisLeftX) {
+            if (value < 0) {
+                isKeyLeftPressed = true;
+                isKeyRightPressed = false;
+            } else if (value > 0) {
+                isKeyRightPressed = true;
+                isKeyLeftPressed = false;
+            } else {
+                isKeyRightPressed = false;
+                isKeyLeftPressed = false;
+            }
+        }
+
+        if (axis == QGamepadManager::AxisLeftY) {
+            if (value < 0) {
+                isKeyDownPressed = false;
+                isKeyUpPressed = true;
+            } else if (value > 0) {
+                isKeyUpPressed = false;
+                isKeyDownPressed = true;
+            } else {
+                isKeyUpPressed = false;
+                isKeyDownPressed = false;
+            }
+        }
+    });
+
+    connect(QGamepadManager::instance(), &QGamepadManager::gamepadButtonPressEvent, this, [&](int deviceId, QGamepadManager::GamepadButton button, double value){
+        isKeySpacePressed = true;
+    });
+
+    connect(QGamepadManager::instance(), &QGamepadManager::gamepadButtonReleaseEvent, this, [&](int deviceId, QGamepadManager::GamepadButton button){
+        isKeySpacePressed = false;
+    });
 }
 
 void MainWindow::initializeGL()
@@ -44,15 +77,8 @@ void MainWindow::initializeGL()
     qDebug() << qPrintable(glType) << qPrintable(glVersion) << "(" << qPrintable(glProfile) << ")";
 
 }
-void MainWindow::paintGL()
+void MainWindow::updateFPSCounter()
 {
-    painter.begin(this);
-
-    updateBackground();
-    updateBullets();
-    updatePlayer();
-
-    // show fps counter?
     frames++;
     if (frameTime.elapsed() > 1000.0) {
          fps = frames / (frameTime.elapsed()/1000.0);
@@ -61,9 +87,18 @@ void MainWindow::paintGL()
     }
 
     painter.drawText(0, 10, "FPS: " + QString::number(fps));
+}
+
+void MainWindow::paintGL()
+{
+    painter.begin(this);
+
+    updateBackground();
+    updateBullets();
+    updatePlayer();
+    updateFPSCounter();
 
     painter.end();
-    update();
 }
 
 void MainWindow::updateBackground()
@@ -75,18 +110,20 @@ void MainWindow::updateBullets()
 {
     if (isKeySpacePressed && (currentBulletTick >= ticksBetweenBullets)) {
         QPointF bulletPos{player.pos.rx()+player.width, player.pos.ry() + player.height/2};
-        bullets.append(bulletPos);
+        Bullet bullet;
+        bullet.pos = bulletPos;
+        bullets.append(bullet);
         currentBulletTick = 0;
     }
 
-    for (QPointF& b: bullets) {
-        b.rx() += 12.0;
+    for (Bullet& b: bullets) {
+        b.update();
 
-        if (b.rx() > width()) {
+        if (b.pos.rx() > width()) {
             bullets.removeFirst();
+        } else {
+            b.paint(painter);
         }
-
-        painter.drawImage(b, bullet);
     }
 
     currentBulletTick = currentBulletTick + 1 % 200;
@@ -136,46 +173,46 @@ void MainWindow::updatePlayer() {
 
 void MainWindow::keyPressEvent(QKeyEvent *e)
 {
-    if (e->key() == Qt::Key_Down) {
-        isKeyDownPressed = true;
-    }
-
-    if (e->key() == Qt::Key_Up) {
-        isKeyUpPressed = true;
-    }
-
-    if (e->key() == Qt::Key_Left) {
-        isKeyLeftPressed = true;
-    }
-
-    if (e->key() == Qt::Key_Right) {
-        isKeyRightPressed = true;
-    }
-
-    if (e->key() == Qt::Key_Space) {
-        isKeySpacePressed = true;
+    switch (e->key()) {
+        case Qt::Key_Down:
+            isKeyDownPressed = true;
+            break;
+        case Qt::Key_Up:
+            isKeyUpPressed = true;
+            break;
+        case Qt::Key_Left:
+            isKeyLeftPressed = true;
+            break;
+        case Qt::Key_Right:
+            isKeyRightPressed = true;
+            break;
+        case Qt::Key_Space:
+            isKeySpacePressed = true;
+            break;
+        default:
+            break;
     }
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *e)
 {
-    if (e->key() == Qt::Key_Down) {
-        isKeyDownPressed = false;
-    }
-
-    if (e->key() == Qt::Key_Up) {
-        isKeyUpPressed = false;
-    }
-
-    if (e->key() == Qt::Key_Left) {
-        isKeyLeftPressed = false;
-    }
-
-    if (e->key() == Qt::Key_Right) {
-        isKeyRightPressed = false;
-    }
-
-    if (e->key() == Qt::Key_Space) {
-        isKeySpacePressed = false;
+    switch (e->key()) {
+        case Qt::Key_Down:
+            isKeyDownPressed = false;
+            break;
+        case Qt::Key_Up:
+            isKeyUpPressed = false;
+            break;
+        case Qt::Key_Left:
+            isKeyLeftPressed = false;
+            break;
+        case Qt::Key_Right:
+            isKeyRightPressed = false;
+            break;
+        case Qt::Key_Space:
+            isKeySpacePressed = false;
+            break;
+        default:
+            break;
     }
 }
