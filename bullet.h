@@ -8,6 +8,8 @@ struct Bullet {
 
     Bullet() {
         QImage textures{":/textures"};
+
+        bullet.fill(Qt::transparent);
         QPainter p2{&bullet};
         p2.drawImage(bullet.rect(), textures, QRectF(240, 50, 15, 10));
     }

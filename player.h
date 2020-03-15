@@ -4,6 +4,8 @@
 #include <QPointF>
 #include <QImage>
 #include <QPainter>
+#include <QPixmap>
+#include <QVector>
 
 struct Player {
 
@@ -14,21 +16,23 @@ struct Player {
     };
 
     Player() {
-        QImage textures;
-        textures.load(":/textures");
+        addSpriteFrame(0, QRectF(7, 0, 35, 40));
+        addSpriteFrame(1, QRectF(55, 0, 35, 40));
+        addSpriteFrame(2, QRectF(100, 0, 35, 40));
+        addSpriteFrame(3, QRectF(150, 0, 35, 40));
+        addSpriteFrame(4, QRectF(200, 0, 35, 40));
+        addSpriteFrame(5, QRectF(250, 0, 35, 40));
+        addSpriteFrame(6, QRectF(296, 0, 35, 40));
+        addSpriteFrame(7, QRectF(340, 0, 35, 40));
+        addSpriteFrame(8, QRectF(390, 0, 35, 40));
+    }
 
-        // Set up textures from the sprite sheet
-        normal.fill(Qt::transparent);
-        QPainter p(&normal);
-        p.drawImage(normal.rect(), textures, QRectF(150, 0, 35, 40));
-
-        up.fill(Qt::transparent);
-        QPainter p1(&up);
-        p1.drawImage(up.rect(), textures, QRectF(7, 0, 35, 40));
-
-        down.fill(Qt::transparent);
-        QPainter p2(&down);
-        p2.drawImage(down.rect(), textures, QRectF(390, 0, 35, 40));
+    void addSpriteFrame(int index, QRectF fromRect) {
+        QImage frame{width, height, QImage::Format_ARGB32};
+        frame.fill(Qt::transparent);
+        QPainter painter(&frame);
+        painter.drawImage(frame.rect(), textures, fromRect);
+        frames.insert(index, frame);
     }
 
     void moveUp() {
@@ -54,20 +58,45 @@ struct Player {
     }
 
     void paint(QPainter& p) {
-        switch (state) {
-        case State::Hovering:
-            p.drawImage(pos, normal);
-            break;
-        case State::MovingUp:
-            p.drawImage(pos, up);
-            break;
-        case State::MovingDown:
-            p.drawImage(pos, down);
-            break;
-        default:
-            break;
+        tick++;
+//        switch (state) {
+//        case State::Hovering:
+//            p.drawImage(pos, normal);
+//            break;
+//        case State::MovingUp:
+//            p.drawImage(pos, up);
+//            break;
+//        case State::MovingDown:
+//            p.drawImage(pos, down);
+//            break;
+//        default:
+//            break;
+//        }
+
+        int delta = 5;
+        if (tick % delta == 0) {
+            frameIndex = (tick / delta) - 1;
+
+            if (reverse) {
+                frameIndex = (frames.count() - 1) - frameIndex;
+            }
         }
+
+        if (tick > (delta * frames.count())) {
+            tick = 0;
+            reverse = !reverse;
+        }
+
+        p.drawImage(pos, frames.at(frameIndex));
     }
+
+//    update() {
+//        tick++;
+
+//        if (tick > 360) {
+//            tick = 0;
+//        }
+//    }
 
     State state{State::Hovering};
 
@@ -76,10 +105,11 @@ struct Player {
     int width{75};
     int height{80};
 
-    QImage normal{width, height, QImage::Format_ARGB32};
-    QImage up{width, height, QImage::Format_ARGB32};
-    QImage down{width, height, QImage::Format_ARGB32};
-
+    QImage textures{":textures"};
+    QVector<QImage> frames{};
+    int tick{0};
+    int frameIndex{0};
+    bool reverse{false};
 };
 
 #endif // PLAYER_H

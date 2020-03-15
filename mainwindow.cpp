@@ -8,6 +8,7 @@
 #include <QKeyEvent>
 #include <QDebug>
 #include <QtGamepad/QGamepad>
+#include <QRandomGenerator>
 
 MainWindow::MainWindow()
 {
@@ -51,6 +52,20 @@ MainWindow::MainWindow()
     });
 }
 
+void MainWindow::resizeGL(int w, int h)
+{
+    starfield.clear();
+
+    for (int i = 0; i < 100; i++) {
+        Star star;
+        star.pos.rx() = qrd.bounded(1, w);
+        star.pos.ry() = qrd.bounded(1, h);
+        star.speed = 1.0 / qrd.bounded(1, 4);
+        star.color = star.speed;
+        starfield.append(star);
+    }
+}
+
 void MainWindow::initializeGL()
 {
     frameTime.start();
@@ -79,18 +94,23 @@ void MainWindow::initializeGL()
 }
 void MainWindow::updateFPSCounter()
 {
-    frames++;
     if (frameTime.elapsed() > 1000.0) {
+        lastTimeForOneFrame = accumulatedFrameTime / frames;
+        accumulatedFrameTime = 0;
          fps = frames / (frameTime.elapsed()/1000.0);
          frames = 0;
          frameTime.restart();
     }
 
-    painter.drawText(0, 10, "FPS: " + QString::number(fps));
+    painter.setPen(Qt::white);
+    painter.drawText(0, 10, QString::number(fps, 'f', 0) + " FPS " + QString::number(lastTimeForOneFrame,'f',0) + "ms per frame");
 }
 
 void MainWindow::paintGL()
 {
+    frames++;
+
+    timeForOneFrame.start();
     painter.begin(this);
 
     updateBackground();
@@ -99,11 +119,41 @@ void MainWindow::paintGL()
     updateFPSCounter();
 
     painter.end();
+
+    accumulatedFrameTime += timeForOneFrame.elapsed();
 }
 
 void MainWindow::updateBackground()
 {
-    painter.fillRect(0,0, width(), height(), Qt::lightGray);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f );
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glEnable(GL_SCISSOR_TEST);
+    for (Star& star: starfield) {
+        // rects.append(QRectF{star.pos.rx(), star.pos.ry(), 4, 4});
+        //const auto color = 0.45 * star.speed;
+        // painter.fillRect(QRectF{star.pos.rx(), star.pos.ry(), 4, 4}, qRgb(255, 255, 255));
+        // star.state = player.state;
+        // star.paint(painter);
+        //painter.drawImage(QPointF{star.pos.rx(), star.pos.ry()}, player.normal);
+
+        glScissor(star.pos.rx(), star.pos.ry(), 4, 4);
+        glClearColor(star.color, star.color, star.color, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        // Remember to disable scissor test, or, perhaps reset the scissor rectangle:
+        star.pos.rx() -= star.speed;
+        star.pos.ry() += sin(0.0117 * star.pos.rx());
+
+        if (star.pos.rx() < -1) {
+            star.pos.rx() = width() + 1;
+            star.pos.ry() = qrd.bounded(0, height());
+        }
+    }
+
+    //painter.setPen(qRgb(255,255,255));
+
+    //painter.drawRects(rects);
+    glDisable(GL_SCISSOR_TEST);
 }
 
 void MainWindow::updateBullets()
