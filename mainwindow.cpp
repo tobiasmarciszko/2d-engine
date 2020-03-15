@@ -239,6 +239,18 @@ void MainWindow::keyPressEvent(QKeyEvent *e)
         case Qt::Key_Space:
             isKeySpacePressed = true;
             break;
+        case Qt::Key_F11:
+            if (visibility() == Visibility::FullScreen) {
+                showNormal();
+            } else {
+                showFullScreen();
+            }
+            break;
+        case Qt::Key_Escape:
+            if (visibility() == Visibility::FullScreen) {
+                showNormal();
+            }
+            break;
         default:
             break;
     }
